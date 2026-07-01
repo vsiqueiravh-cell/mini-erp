@@ -1,6 +1,6 @@
 # Mini ERP
 
-![CI](https://img.shields.io/badge/CI-GitHub_Actions-2563eb)
+[![CI](https://github.com/vsiqueiravh-cell/mini-erp/actions/workflows/ci.yml/badge.svg)](https://github.com/vsiqueiravh-cell/mini-erp/actions/workflows/ci.yml)
 ![.NET](https://img.shields.io/badge/.NET-10-512bd4)
 ![React](https://img.shields.io/badge/React-19-149eca)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Ready-336791)
@@ -132,3 +132,15 @@ Main endpoints:
 ## Portfolio Intent
 
 This repository demonstrates how an enterprise engineer structures a public full stack business platform without exposing client code: domain modeling, API boundaries, persistence, authentication, UI workflows, tests, Docker and CI.
+
+## Author & Contact
+
+Built and maintained by **Victor Henrique de Siqueira**.
+
+- Email: [victor.h.siqueira@hotmail.com](mailto:victor.h.siqueira@hotmail.com)
+- Phone / WhatsApp: [+55 11 94340-3468](tel:+5511943403468)
+- GitHub: [vsiqueiravh-cell](https://github.com/vsiqueiravh-cell)
+
+## Portfolio Notice
+
+This repository is part of a public enterprise software portfolio. All accounts, orders, invoices, inventory records and financial data are fictional and created only to demonstrate full stack ERP delivery.
