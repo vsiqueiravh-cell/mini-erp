@@ -26,6 +26,10 @@ jobs:
         working-directory: backend
         run: dotnet restore MiniErp.slnx
 
+      - name: Format
+        working-directory: backend
+        run: dotnet format MiniErp.slnx --verify-no-changes
+
       - name: Build
         working-directory: backend
         run: dotnet build MiniErp.slnx --configuration Release --no-restore
@@ -56,6 +60,10 @@ jobs:
       - name: Install dependencies
         working-directory: frontend
         run: npm ci
+
+      - name: Dependency audit
+        working-directory: frontend
+        run: npm audit --audit-level=moderate
 
       - name: Lint
         working-directory: frontend

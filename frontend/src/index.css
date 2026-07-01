@@ -837,4 +837,52 @@ h2 {
   .risk-layout {
     grid-template-columns: 1fr;
   }
+
+  .data-table,
+  .permission-table {
+    overflow-x: visible;
+  }
+
+  .data-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    min-width: 0;
+    margin-bottom: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .data-row.header {
+    display: none;
+  }
+
+  .data-row > span {
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 46px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .data-row > span:last-child {
+    border-bottom: 0;
+  }
+
+  .data-row > span::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.74rem;
+    font-weight: 850;
+    text-transform: uppercase;
+  }
+
+  .permission-row {
+    grid-template-columns: minmax(180px, 1fr) repeat(3, 56px);
+    min-width: 0;
+  }
+
+  .permission-row.header span:not(:first-child),
+  .permission-row > span {
+    font-size: 0.72rem;
+  }
 }

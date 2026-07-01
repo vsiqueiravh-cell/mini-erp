@@ -38,13 +38,16 @@ import type { LucideIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import {
+  authenticate,
+  createSalesOrder,
+  fallbackWorkspace,
+  loadWorkspace,
+  markInvoicePaid,
+  updateCustomerStatus,
+} from './api'
+import {
   categoryRevenueSeed,
-  customersSeed,
-  inventorySeed,
-  invoicesSeed,
-  ordersSeed,
   permissions,
-  productsSeed,
   profiles,
   revenueSeed,
   riskSeed,
@@ -58,6 +61,7 @@ import type {
   Product,
   ThemeMode,
   UserProfile,
+  CustomerStatus,
 } from './types'
 import './index.css'
 
@@ -79,11 +83,12 @@ function App() {
   const [activeView, setActiveView] = useState<DashboardView>('dashboard')
   const [profile, setProfile] = useState<UserProfile>(profiles[0])
   const [searchTerm, setSearchTerm] = useState('')
-  const [customers, setCustomers] = useState<Customer[]>(customersSeed)
-  const [products] = useState<Product[]>(productsSeed)
-  const [inventory, setInventory] = useState<InventoryItem[]>(inventorySeed)
-  const [orders, setOrders] = useState<Order[]>(ordersSeed)
-  const [invoices, setInvoices] = useState<Invoice[]>(invoicesSeed)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [customers, setCustomers] = useState<Customer[]>(fallbackWorkspace.customers)
+  const [products, setProducts] = useState<Product[]>(fallbackWorkspace.products)
+  const [inventory, setInventory] = useState<InventoryItem[]>(fallbackWorkspace.inventory)
+  const [orders, setOrders] = useState<Order[]>(fallbackWorkspace.orders)
+  const [invoices, setInvoices] = useState<Invoice[]>(fallbackWorkspace.invoices)
   const [isOrderPanelOpen, setIsOrderPanelOpen] = useState(false)
 
   const canManage = profile.role !== 'Analyst'
@@ -144,12 +149,60 @@ function App() {
     }
   }, [inventory, invoices, orders])
 
-  function createOrder(customerId: string, productId: string, quantity: number) {
+  function applyWorkspace(workspace: typeof fallbackWorkspace) {
+    setCustomers(workspace.customers)
+    setProducts(workspace.products)
+    setInventory(workspace.inventory)
+    setOrders(workspace.orders)
+    setInvoices(workspace.invoices)
+  }
+
+  async function signIn(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setIsAuthenticated(true)
+
+    const session = await authenticate(profile.email, 'enterprise-demo')
+    if (!session) {
+      setAccessToken(null)
+      applyWorkspace(fallbackWorkspace)
+      return
+    }
+
+    setAccessToken(session.accessToken)
+    setProfile({
+      email: session.user.email,
+      name: session.user.name,
+      role: session.user.role,
+    })
+
+    const workspace = await loadWorkspace(session.accessToken)
+    if (workspace) {
+      applyWorkspace(workspace)
+    }
+  }
+
+  async function refreshFromApi(token: string) {
+    const workspace = await loadWorkspace(token)
+    if (workspace) {
+      applyWorkspace(workspace)
+    }
+  }
+
+  async function createOrder(customerId: string, productId: string, quantity: number) {
     const customer = customers.find((item) => item.id === customerId)
     const product = products.find((item) => item.id === productId)
 
     if (!customer || !product || quantity < 1) {
       return
+    }
+
+    if (accessToken) {
+      const created = await createSalesOrder(accessToken, customerId, productId, quantity)
+      if (created) {
+        await refreshFromApi(accessToken)
+        setActiveView('orders')
+        return
+      }
     }
 
     const sequence = orders.length + 1
@@ -201,6 +254,42 @@ function App() {
     setActiveView('orders')
   }
 
+  async function changeCustomerStatus(id: string, status: CustomerStatus) {
+    if (accessToken) {
+      const updated = await updateCustomerStatus(accessToken, id, status)
+      if (updated) {
+        setCustomers((current) =>
+          current.map((customer) => (customer.id === id ? updated : customer)),
+        )
+        return
+      }
+    }
+
+    setCustomers((current) =>
+      current.map((customer) =>
+        customer.id === id ? { ...customer, status } : customer,
+      ),
+    )
+  }
+
+  async function settleInvoice(id: string) {
+    if (accessToken) {
+      const updated = await markInvoicePaid(accessToken, id)
+      if (updated) {
+        setInvoices((current) =>
+          current.map((invoice) => (invoice.id === id ? updated : invoice)),
+        )
+        return
+      }
+    }
+
+    setInvoices((current) =>
+      current.map((invoice) =>
+        invoice.id === id ? { ...invoice, status: 'Paid' } : invoice,
+      ),
+    )
+  }
+
   if (!isAuthenticated) {
     return (
       <main className="login-shell" data-theme={theme}>
@@ -216,10 +305,7 @@ function App() {
           </div>
           <form
             className="login-form"
-            onSubmit={(event) => {
-              event.preventDefault()
-              setIsAuthenticated(true)
-            }}
+            onSubmit={(event) => void signIn(event)}
           >
             <label>
               Account
@@ -289,13 +375,7 @@ function App() {
             <CustomersView
               canManage={canManage}
               customers={filtered.customers}
-              onStatusChange={(id, status) =>
-                setCustomers((current) =>
-                  current.map((customer) =>
-                    customer.id === id ? { ...customer, status } : customer,
-                  ),
-                )
-              }
+              onStatusChange={(id, status) => void changeCustomerStatus(id, status)}
             />
           )}
           {activeView === 'products' && <ProductsView products={filtered.products} />}
@@ -305,13 +385,7 @@ function App() {
             <FinanceView
               canAdmin={canAdmin}
               invoices={filtered.invoices}
-              onMarkPaid={(id) =>
-                setInvoices((current) =>
-                  current.map((invoice) =>
-                    invoice.id === id ? { ...invoice, status: 'Paid' } : invoice,
-                  ),
-                )
-              }
+              onMarkPaid={(id) => void settleInvoice(id)}
             />
           )}
           {activeView === 'permissions' && <PermissionsView activeRole={profile.role} />}
@@ -323,7 +397,7 @@ function App() {
           products={products}
           onClose={() => setIsOrderPanelOpen(false)}
           onSubmit={(customerId, productId, quantity) => {
-            createOrder(customerId, productId, quantity)
+            void createOrder(customerId, productId, quantity)
             setIsOrderPanelOpen(false)
           }}
         />
@@ -824,7 +898,9 @@ function DataTable({
       {rows.map((row, index) => (
         <div className="data-row" key={index}>
           {row.map((cell, cellIndex) => (
-            <span key={`${index}-${cellIndex}`}>{cell}</span>
+            <span data-label={columns[cellIndex]} key={`${index}-${cellIndex}`}>
+              {cell}
+            </span>
           ))}
         </div>
       ))}

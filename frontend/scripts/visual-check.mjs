@@ -39,12 +39,14 @@ for (const target of [
     throw new Error(`Unexpected page overflow: ${layoutWidth}px on ${target.name}`)
   }
 
+  await page.mouse.move(4, 4)
   await page.screenshot({
     fullPage: true,
     path: join(screenshotDir, `${target.name}-dashboard.png`),
   })
 
   await page.getByRole('button', { name: 'Toggle theme' }).click()
+  await page.mouse.move(4, 4)
   await page.screenshot({
     fullPage: true,
     path: join(screenshotDir, `${target.name}-dark.png`),

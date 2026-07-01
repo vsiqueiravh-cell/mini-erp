@@ -6,6 +6,15 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 850,
   },
+  server: {
+    port: 5174,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5080',
+        changeOrigin: true,
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',

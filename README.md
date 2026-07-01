@@ -1,8 +1,22 @@
 # Mini ERP
 
+![CI](https://img.shields.io/badge/CI-GitHub_Actions-2563eb)
+![.NET](https://img.shields.io/badge/.NET-10-512bd4)
+![React](https://img.shields.io/badge/React-19-149eca)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Ready-336791)
+![License](https://img.shields.io/badge/License-MIT-16a34a)
+
 A full stack portfolio ERP platform built with .NET, React, TypeScript, PostgreSQL and Docker.
 
-The project models realistic enterprise software workflows: authentication, role-based access, customers, products, sales orders, inventory reservations, invoices, finance operations and executive analytics. All data is fictitious and safe for public portfolio use.
+The project models realistic enterprise software workflows: authentication, role-based access, customers, products, sales orders, inventory reservations, invoices, finance operations and executive analytics. The React UI calls the ASP.NET Core API through `/api` and keeps a deterministic fallback dataset for reliable demos when the backend is offline. All data is fictitious and safe for public portfolio use.
+
+## Preview
+
+![Mini ERP desktop preview](docs/assets/screenshots/desktop-dashboard.png)
+
+| Mobile | Dark mode |
+| --- | --- |
+| ![Mini ERP mobile preview](docs/assets/screenshots/mobile-dashboard.png) | ![Mini ERP dark mode preview](docs/assets/screenshots/desktop-dark.png) |
 
 ## Architecture
 
@@ -19,6 +33,7 @@ mini-erp/
 
 - JWT authentication with demo users and role claims.
 - RBAC policies for Administrator, Manager and Analyst access.
+- React frontend integrated with the API, with deterministic fallback for offline demos.
 - Customer portfolio with status control.
 - Product catalog with inventory positions.
 - Sales order creation with stock reservation.
@@ -28,6 +43,13 @@ mini-erp/
 - Docker Compose environment for local full stack execution.
 - Automated tests for backend services and frontend workflows.
 - GitHub Actions CI for backend, frontend and vulnerability audit.
+
+## What This Demonstrates
+
+- Full stack enterprise application structure across API, persistence and UI.
+- Domain workflows for order creation, stock reservation and invoice settlement.
+- Security boundaries through JWT authentication and RBAC policies.
+- Public portfolio design using fictitious ERP data instead of client code.
 
 ## Demo Accounts
 
